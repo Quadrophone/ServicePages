@@ -65,6 +65,7 @@ class ServicePages extends WireData implements Module, ConfigurableModule {
 			'1',
 			),
 		'maxLimit' => 50,
+		'APIkey' => ''
 		);
 
 	/**
@@ -122,6 +123,8 @@ class ServicePages extends WireData implements Module, ConfigurableModule {
 			$this->errors[] = "Out of bounds limit setting (max={$this->maxLimit})";
 		}
 
+
+
 		// exit early if there have been any errors so far 
 		if(count($this->errors)) return;
 
@@ -149,6 +152,7 @@ class ServicePages extends WireData implements Module, ConfigurableModule {
 
 		// convert queryFields (where IDs) to names
 		$queryFields = $this->queryFields; 
+		
 		foreach($queryFields as $key => $id) {
 			if(!ctype_digit("$id")) continue; 
 			$field = $this->fields->get((int) $id); 
@@ -161,7 +165,7 @@ class ServicePages extends WireData implements Module, ConfigurableModule {
 		// remove variables that aren't allowed to be queried
 		foreach($this->input->get as $key => $value) {
 
-			if(in_array($key, array('limit', 'start', 'sort', 'include'))) continue; // always allow
+			if(in_array($key, array('key', 'limit', 'start', 'sort', 'include'))) continue; // always allow
 
 			// remove operators
 			$k = trim($key, '<>*$^%!-'); 
@@ -243,6 +247,9 @@ class ServicePages extends WireData implements Module, ConfigurableModule {
 	 */
 	public function execute() {
 
+		// exit if the API key does not match
+		if ($this->input->get->key != $this->APIkey) return;
+		
 		if(!count($this->input->get)) return $this->instructions();
 
 		// save debug state since sanitizeRequest removes it
@@ -354,6 +361,13 @@ class ServicePages extends WireData implements Module, ConfigurableModule {
 		$f->label = 'Maximum pages to match per request';
 		$f->notes = 'Pagination (/page[n]/) in the URL may be used to paginate between result pages.';
 		$f->value = $data['maxLimit'];
+		$inputfields->add($f);
+
+		$f = $modules->get('InputfieldText');
+		$f->name = 'APIkey';
+		$f->label = 'APIkey';
+		$f->notes = 'APIkey';
+		$f->value = $data['APIkey'];
 		$inputfields->add($f);
 
 		$help = $modules->get('InputfieldMarkup');
